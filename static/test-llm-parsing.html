@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Content Parsing Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .slide-card {
+            transition: all 0.3s ease;
+        }
+        .slide-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .content-preview {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .bullet-point {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+        }
+        .bullet-point::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+        .char-counter {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        .loading-dots {
+            display: inline-block;
+        }
+        .loading-dots::after {
+            content: "";
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: ""; }
+            40% { content: "."; }
+            60% { content: ".."; }
+            80%, 100% { content: "..."; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-brain text-blue-600 mr-3"></i>
+                LLM Content Parsing Test
+            </h1>
+            <p class="text-xl text-gray-600">Test how the LLM structures your content into slides</p>
+            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    This tests ONLY the content parsing - no PowerPoint generation. Perfect for debugging content structure issues.
+                </p>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+            <!-- Left Panel - Input -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-edit mr-2"></i>Input Content
+                </h2>
+                
+                <form id="parsingForm" class="space-y-4">
+                    <!-- API Configuration -->
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-key mr-1"></i>API Key
+                            </label>
+                            <input
+                                type="password"
+                                id="apiKey"
+                                placeholder="Enter your API key..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                required
+                            >
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-robot mr-1"></i>LLM Provider
+                            </label>
+                            <select 
+                                id="llmProvider" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            >
+                                <option value="openai">OpenAI (GPT-4)</option>
+                                <option value="anthropic">Anthropic (Claude)</option>
+                                <option value="gemini">Google Gemini</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Content Input -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-file-text mr-1"></i>Content to Parse
+                        </label>
+                        <textarea
+                            id="inputText"
+                            placeholder="Paste your content here..."
+                            class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            rows="12"
+                            required
+                        ></textarea>
+                        <div class="char-counter mt-1" id="charCounter">0 characters</div>
+                    </div>
+
+                    <!-- Guidance -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-compass mr-1"></i>Guidance (Optional)
+                        </label>
+                        <input
+                            type="text"
+                            id="guidance"
+                            placeholder="e.g., Create an investor pitch deck, Make it technical, Focus on results..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        >
+                    </div>
+
+                    <!-- Quick Examples -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-bolt mr-1"></i>Quick Examples
+                        </label>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="loadExample('adobe')" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs hover:bg-blue-200 transition">
+                                Adobe Hackathon
+                            </button>
+                            <button type="button" onclick="loadExample('product')" class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs hover:bg-green-200 transition">
+                                Product Launch
+                            </button>
+                            <button type="button" onclick="loadExample('research')" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs hover:bg-purple-200 transition">
+                                Research Findings
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button
+                        type="submit"
+                        id="parseBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <i class="fas fa-brain mr-2"></i>
+                        Parse Content into Slides
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Panel - Live Stats -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2"></i>Live Analysis
+                </h2>
+                
+                <div id="liveStats" class="space-y-4">
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-chart-line text-4xl mb-4"></i>
+                        <p>Enter content to see live analysis</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progressSection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-cog fa-spin text-blue-600 mr-3"></i>
+                <h3 class="text-lg font-semibold">Parsing Content<span class="loading-dots"></span></h3>
+            </div>
+            <div class="bg-gray-200 rounded-full h-2 mb-4">
+                <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div id="progressText" class="text-sm text-gray-600">Initializing LLM...</div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <!-- Summary Cards -->
+            <div class="grid md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-layer-group text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Total Slides</p>
+                            <p class="text-2xl font-bold text-gray-900" id="totalSlides">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">With Content</p>
+                            <p class="text-2xl font-bold text-gray-900" id="slidesWithContent">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-font text-orange-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Avg Content</p>
+                            <p class="text-2xl font-bold text-gray-900" id="avgContent">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-star text-purple-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Quality Score</p>
+                            <p class="text-2xl font-bold text-gray-900" id="qualityScore">0%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slides Grid -->
+            <div id="slidesGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-8 text-center space-x-4">
+                <button 
+                    onclick="downloadResults()" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200"
+                >
+                    <i class="fas fa-download mr-2"></i>Download JSON
+                </button>
+                <button 
+                    onclick="resetTest()" 
+                    class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200"
+                >
+                    <i class="fas fa-refresh mr-2"></i>Test Again
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="hidden bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-red-800 mb-2">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Error
+            </h3>
+            <p id="errorMessage" class="text-red-700"></p>
+        </div>
+    </div>
+
+    <script src="test-llm-parsing.js"></script>
+</body>
+</html>

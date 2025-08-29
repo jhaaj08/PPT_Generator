@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Presentation Flow Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .file-upload-area {
+            transition: all 0.3s ease;
+        }
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        .file-upload-area.dragover {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+        .slide-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 200px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .slide-preview-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 20px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .slide-preview .slide-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+        .slide-preview .slide-content {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        .slide-preview .slide-number {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(0,0,0,0.3);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+        .progress-timeline {
+            display: flex;
+            align-items: center;
+            margin: 2rem 0;
+        }
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background-color: #e5e7eb;
+            z-index: 1;
+        }
+        .progress-step.completed::after {
+            background-color: #10b981;
+        }
+        .progress-step.active::after {
+            background-color: #3b82f6;
+        }
+        .progress-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            border: 2px solid #e5e7eb;
+            background: white;
+            font-weight: bold;
+        }
+        .progress-step.completed .progress-circle {
+            background-color: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+        .progress-step.active .progress-circle {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-presentation-screen text-blue-600 mr-3"></i>
+                Full Presentation Flow Test
+            </h1>
+            <p class="text-xl text-gray-600">Complete end-to-end presentation generation with previews</p>
+            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Upload template → Enter content → Generate slides → Preview → Download
+                </p>
+            </div>
+        </div>
+
+        <!-- Progress Timeline -->
+        <div class="progress-timeline">
+            <div class="progress-step active" id="step1">
+                <div class="progress-circle">1</div>
+                <p class="text-sm font-medium">Input</p>
+            </div>
+            <div class="progress-step" id="step2">
+                <div class="progress-circle">2</div>
+                <p class="text-sm font-medium">Process</p>
+            </div>
+            <div class="progress-step" id="step3">
+                <div class="progress-circle">3</div>
+                <p class="text-sm font-medium">Preview</p>
+            </div>
+            <div class="progress-step" id="step4">
+                <div class="progress-circle">4</div>
+                <p class="text-sm font-medium">Download</p>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <div id="inputSection" class="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <form id="fullFlowForm" class="space-y-6">
+                <!-- API Configuration -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-key mr-2"></i>API Key
+                        </label>
+                        <input
+                            type="password"
+                            id="apiKey"
+                            placeholder="Enter your API key..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-robot mr-2"></i>LLM Provider
+                        </label>
+                        <select 
+                            id="llmProvider" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="openai">OpenAI (GPT-4)</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="gemini">Google Gemini</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Content Input -->
+                <div>
+                    <label class="block text-lg font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-file-text mr-2"></i>Presentation Content
+                    </label>
+                    <textarea
+                        id="inputText"
+                        placeholder="Enter your presentation content here..."
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        rows="8"
+                        required
+                    >Adobe India Hackathon 2025: Igniting Innovation
+
+Welcome to the Adobe India Hackathon 2025 – a national platform where creativity meets code. This year, we bring together thousands of students across India to solve real-world problems using Adobe's creative, AI, and cloud-based tools. The goal: to inspire, empower, and discover the next generation of tech and design innovators.
+
+The Adobe Hackathon is not just a coding challenge. It's a three-phase experience where students ideate, build backend systems, and integrate front-end and AI-powered solutions using Adobe Express, Firefly, Acrobat AI Assistant, and other tools. It blends design thinking, technical depth, and strategic storytelling.
+
+In 2025, the Hackathon saw over 130,000 student registrations across 500+ colleges. More than 12,000 teams submitted projects, with 60 finalists making it to the grand finale. It became one of the largest creator-tech hackathons in the country.
+
+Participants were introduced to Adobe's latest technologies—ranging from Firefly for generative creativity to Acrobat Projects for document workflows. Hackers leveraged Adobe APIs, integrated OpenAI models, and developed full-stack projects addressing social impact, education, and digital productivity.
+
+What we learned: Real-time mentoring improves success rate. Hackers who attended Adobe-led workshops were 2.5x more likely to reach the final round. Cross-functional teams (tech + design) had higher jury scores. The more intuitive the onboarding, the more submissions we received—proving that clarity drives creativity.
+
+Winning ideas included an AI-powered rural job resume generator, an automated transcript-to-podcast converter using Adobe tools, and a collaborative portfolio builder for creators. Several teams received internship interviews and long-term mentorship offers from Adobe.
+
+This Hackathon wasn't just about solutions—it was about experience. Students explored Adobe's ecosystem hands-on, worked closely with Adobe mentors, and showcased their ideas to industry leaders. For Adobe, it amplified our brand with Gen Z, created scalable engagement, and surfaced fresh innovation.
+
+Looking ahead: We're launching the Adobe Creator Campus Program to sustain this energy across the year. Adobe Express will soon integrate into academic workflows via NPTEL and AICTE partnerships. And Hackathon 2.0 will bring challenge tiers, GenAI toolkits, and creator economy challenges to campuses.
+
+Let's keep building what's next—together.</textarea>
+                </div>
+
+                <!-- Guidance -->
+                <div>
+                    <label class="block text-lg font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-compass mr-2"></i>Presentation Guidance
+                    </label>
+                    
+                    <!-- Quick Templates -->
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">Quick Templates:</p>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+                            <button type="button" class="guidance-template px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors" data-template="sales">
+                                📈 Sales Deck
+                            </button>
+                            <button type="button" class="guidance-template px-3 py-2 text-sm bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200 transition-colors" data-template="research">
+                                🔬 Research Summary
+                            </button>
+                            <button type="button" class="guidance-template px-3 py-2 text-sm bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg border border-purple-200 transition-colors" data-template="pitch">
+                                🚀 Investor Pitch
+                            </button>
+                            <button type="button" class="guidance-template px-3 py-2 text-sm bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg border border-orange-200 transition-colors" data-template="training">
+                                🎓 Training Material
+                            </button>
+                            <button type="button" class="guidance-template px-3 py-2 text-sm bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 transition-colors" data-template="proposal">
+                                📋 Project Proposal
+                            </button>
+                            <button type="button" class="guidance-template px-3 py-2 text-sm bg-yellow-50 hover:bg-yellow-100 text-yellow-700 rounded-lg border border-yellow-200 transition-colors" data-template="report">
+                                📊 Executive Report
+                            </button>
+                            <button type="button" class="guidance-template px-3 py-2 text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg border border-indigo-200 transition-colors" data-template="strategy">
+                                🎯 Strategy Overview
+                            </button>
+                            <button type="button" class="guidance-template px-3 py-2 text-sm bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg border border-teal-200 transition-colors" data-template="conference">
+                                🎤 Conference Talk
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <input
+                        type="text"
+                        id="guidance"
+                        placeholder="e.g., Create an engaging presentation for Adobe stakeholders..."
+                        value="Create an engaging presentation for Adobe stakeholders about the hackathon success"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                </div>
+
+                <!-- Speaker Notes Option -->
+                <div>
+                    <label class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="includeSpeakerNotes"
+                            checked
+                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        >
+                        <span class="ml-3 text-lg font-semibold text-gray-800">
+                            <i class="fas fa-microphone mr-2"></i>Include Speaker Notes
+                        </span>
+                    </label>
+                    <p class="text-sm text-gray-500 mt-2 ml-8">
+                        Generate detailed speaker notes for each slide to help with presentation delivery
+                    </p>
+                </div>
+
+                <!-- Template Upload -->
+                <div>
+                    <label class="block text-lg font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-file-powerpoint mr-2"></i>PowerPoint Template
+                    </label>
+                    <div
+                        id="fileUploadArea"
+                        class="file-upload-area border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer"
+                    >
+                        <input
+                            type="file"
+                            id="templateFile"
+                            accept=".pptx,.potx"
+                            class="hidden"
+                            required
+                        >
+                        <div id="uploadContent">
+                            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-3"></i>
+                            <p class="text-lg font-medium text-gray-700">Upload PowerPoint Template</p>
+                            <p class="text-sm text-gray-500 mt-1">Drag & drop or click to browse (.pptx, .potx)</p>
+                        </div>
+                        <div id="fileInfo" class="hidden">
+                            <i class="fas fa-file-powerpoint text-3xl text-blue-500 mb-3"></i>
+                            <p class="text-lg font-medium text-gray-700" id="fileName"></p>
+                            <p class="text-sm text-gray-500" id="fileSize"></p>
+                            <button type="button" onclick="clearFile()" class="mt-2 text-red-500 hover:text-red-700">
+                                <i class="fas fa-times mr-1"></i>Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button
+                        type="submit"
+                        id="generateBtn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <i class="fas fa-magic mr-2"></i>
+                        Generate Full Presentation
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Processing Section -->
+        <div id="processingSection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-cog fa-spin text-blue-600 mr-3"></i>
+                <h3 class="text-lg font-semibold" id="processingTitle">Processing...</h3>
+            </div>
+            <div class="bg-gray-200 rounded-full h-3 mb-4">
+                <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div id="processingSteps" class="space-y-2 text-sm text-gray-600">
+                <div id="processStep1" class="flex items-center">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                    Extracting template data...
+                </div>
+                <div id="processStep2" class="hidden flex items-center">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                    Generating manifest with LLM...
+                </div>
+                <div id="processStep3" class="hidden flex items-center">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                    Structuring content into slides...
+                </div>
+                <div id="processStep4" class="hidden flex items-center">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                    Creating presentation with template styling...
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div id="previewSection" class="hidden">
+            <!-- Preview Header -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800" id="presentationTitle">Generated Presentation</h3>
+                        <p class="text-gray-600 mt-1">
+                            <span id="slideCount">0</span> slides • 
+                            <span id="templateUsed">Template</span> • 
+                            <span id="generationTime">Generated</span>
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button 
+                            onclick="regeneratePresentation()" 
+                            class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+                        >
+                            <i class="fas fa-redo mr-2"></i>Regenerate
+                        </button>
+                        <button 
+                            onclick="downloadPresentation()" 
+                            class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg font-bold transition duration-200"
+                        >
+                            <i class="fas fa-download mr-2"></i>Download PPTX
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide Previews Grid -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-eye mr-2"></i>Slide Previews
+                </h4>
+                <div id="slidePreviews" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Generation Details -->
+            <div class="mt-6 bg-white rounded-lg shadow-lg p-6">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-info-circle mr-2"></i>Generation Details
+                </h4>
+                <div id="generationDetails" class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="hidden bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-red-800 mb-2">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Error
+            </h3>
+            <p id="errorMessage" class="text-red-700"></p>
+        </div>
+    </div>
+
+    <script src="test-full-flow.js"></script>
+</body>
+</html>

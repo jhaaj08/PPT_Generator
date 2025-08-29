@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Manifest Generator - Step 1 Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .json-viewer {
+            background: #1a1a1a;
+            color: #f8f8f2;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .json-key { color: #66d9ef; }
+        .json-string { color: #a6e22e; }
+        .json-number { color: #fd971f; }
+        .json-boolean { color: #f92672; }
+        .json-null { color: #ae81ff; }
+        .file-upload-area {
+            transition: all 0.3s ease;
+        }
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        .file-upload-area.dragover {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .collapsible {
+            cursor: pointer;
+        }
+        .collapsible:hover {
+            background-color: #374151;
+        }
+        .collapsed {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-microscope text-blue-600 mr-3"></i>
+                Template Manifest Generator
+            </h1>
+            <p class="text-xl text-gray-600">Step 1: Test LLM Template Analysis</p>
+            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Upload a PowerPoint template to see how our LLM analyzes its design elements and creates a structured manifest for slide generation.
+                </p>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <form id="manifestForm" class="space-y-6">
+                <!-- API Configuration -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-key mr-2"></i>API Key
+                        </label>
+                        <input
+                            type="password"
+                            id="apiKey"
+                            placeholder="Enter your API key..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                        <p class="text-sm text-gray-500 mt-1">Your API key is never stored or logged</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-robot mr-2"></i>LLM Provider
+                        </label>
+                        <select 
+                            id="llmProvider" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="openai">OpenAI (GPT-4)</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="gemini">Google Gemini</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- File Upload -->
+                <div>
+                    <label class="block text-lg font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-file-powerpoint mr-2"></i>PowerPoint Template
+                    </label>
+                    <div
+                        id="fileUploadArea"
+                        class="file-upload-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer"
+                    >
+                        <input
+                            type="file"
+                            id="templateFile"
+                            accept=".pptx,.potx"
+                            class="hidden"
+                            required
+                        >
+                        <div id="uploadContent">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-lg font-medium text-gray-700">Click to upload or drag & drop</p>
+                            <p class="text-sm text-gray-500 mt-2">PowerPoint files (.pptx, .potx) up to 50MB</p>
+                        </div>
+                        <div id="fileInfo" class="hidden">
+                            <i class="fas fa-file-powerpoint text-4xl text-blue-500 mb-4"></i>
+                            <p class="text-lg font-medium text-gray-700" id="fileName"></p>
+                            <p class="text-sm text-gray-500" id="fileSize"></p>
+                            <button type="button" onclick="clearFile()" class="mt-2 text-red-500 hover:text-red-700">
+                                <i class="fas fa-times mr-1"></i>Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button
+                        type="submit"
+                        id="generateBtn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <i class="fas fa-magic mr-2"></i>
+                        Generate Template Manifest
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progressSection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-cog fa-spin text-blue-600 mr-3"></i>
+                <h3 class="text-lg font-semibold">Analyzing Template...</h3>
+            </div>
+            <div class="bg-gray-200 rounded-full h-2 mb-4">
+                <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+            </div>
+            <div id="progressSteps" class="space-y-2 text-sm text-gray-600">
+                <div id="step1" class="flex items-center">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                    Extracting raw template data...
+                </div>
+                <div id="step2" class="hidden flex items-center">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                    Sending to LLM for analysis...
+                </div>
+                <div id="step3" class="hidden flex items-center">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                    Generating structured manifest...
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <!-- Summary Cards -->
+            <div id="summaryCards" class="grid md:grid-cols-4 gap-4 mb-8">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- Detailed Results -->
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Raw Template Data -->
+                <div class="bg-white rounded-lg shadow-lg">
+                    <div class="bg-gray-800 text-white px-6 py-4 rounded-t-lg">
+                        <h3 class="text-lg font-semibold">
+                            <i class="fas fa-database mr-2"></i>Raw Template Data
+                        </h3>
+                        <p class="text-sm text-gray-300">Extracted directly from PowerPoint file</p>
+                    </div>
+                    <div class="p-6">
+                        <pre id="rawDataDisplay" class="json-viewer p-4 rounded-lg overflow-auto max-h-96"></pre>
+                    </div>
+                </div>
+
+                <!-- LLM Manifest -->
+                <div class="bg-white rounded-lg shadow-lg">
+                    <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                        <h3 class="text-lg font-semibold">
+                            <i class="fas fa-brain mr-2"></i>LLM Manifest
+                        </h3>
+                        <p class="text-sm text-blue-100">AI-structured design rules</p>
+                    </div>
+                    <div class="p-6">
+                        <pre id="manifestDisplay" class="json-viewer p-4 rounded-lg overflow-auto max-h-96"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 text-center space-x-4">
+                <button 
+                    onclick="downloadManifest()" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200"
+                >
+                    <i class="fas fa-download mr-2"></i>Download Manifest JSON
+                </button>
+                <button 
+                    onclick="resetForm()" 
+                    class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200"
+                >
+                    <i class="fas fa-refresh mr-2"></i>Test Another Template
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="hidden bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+            <h3 class="text-lg font-semibold text-red-800 mb-2">
+                <i class="fas fa-exclamation-triangle mr-2"></i>Error
+            </h3>
+            <p id="errorMessage" class="text-red-700"></p>
+        </div>
+    </div>
+
+    <script src="test-manifest.js"></script>
+</body>
+</html>

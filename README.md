@@ -15,7 +15,8 @@ Transform your text into professional PowerPoint presentations with AI-driven co
 
 ## 🎯 Live Demo
 
-Access the application at: `http://localhost:8080`
+- **Local Development**: `http://localhost:8080`
+- **Deployed Version**: Deploy to Render, Heroku, or any cloud platform
 
 ## 📋 Requirements
 
@@ -59,6 +60,49 @@ python run.py
 ```
 
 The application will be available at `http://localhost:8080`
+
+## 🚀 Deployment
+
+### Deploy to Render
+
+1. **Connect to GitHub**
+   - Go to [Render Dashboard](https://render.com/dashboard)
+   - Click "New" → "Web Service"
+   - Connect your GitHub repository: `jhaaj08/PPT_Generator`
+
+2. **Configure Deployment**
+   - **Name**: `ppt-generator`
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn --bind 0.0.0.0:$PORT app:app`
+
+3. **Environment Variables**
+   - Set `FLASK_ENV` to `production`
+   - Set `PYTHON_VERSION` to `3.9.0` (optional)
+
+4. **Deploy**
+   - Click "Create Web Service"
+   - Wait for deployment to complete
+   - Access your live application at the provided Render URL
+
+### Deploy to Heroku
+
+```bash
+# Install Heroku CLI and login
+heroku login
+
+# Create Heroku app
+heroku create ppt-generator-app
+
+# Set environment variables
+heroku config:set FLASK_ENV=production
+
+# Deploy
+git push heroku main
+
+# Open the app
+heroku open
+```
 
 ## 📖 Usage Instructions
 

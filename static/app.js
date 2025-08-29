@@ -1,9 +1,9 @@
 // PPT Generator Frontend JavaScript
 
-// Configuration
+// Configuration - Dynamic API URL for both local and deployed environments
 const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:8080/api' 
-    : '/api';
+    : `${window.location.protocol}//${window.location.host}/api`;
 
 // DOM Elements
 const pptForm = document.getElementById('pptForm');

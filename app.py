@@ -524,4 +524,17 @@ def too_large(e):
     return jsonify({'error': 'File too large. Maximum size is 50MB'}), 413
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    import os
+    
+    # Create uploads directory if it doesn't exist
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    
+    # Get port from environment variable for deployment
+    port = int(os.environ.get('PORT', 8080))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    
+    print("🚀 Starting PPT Generator")
+    print("📋 Make sure you have your LLM API key ready!")
+    print("✨ Ready to transform your text into presentations!")
+    
+    app.run(host='0.0.0.0', port=port, debug=debug)

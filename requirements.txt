@@ -10,4 +10,5 @@ werkzeug==3.0.1
 httpx==0.25.0
 httpcore==0.18.0
 h11==0.14.0
+gunicorn==21.2.0
 

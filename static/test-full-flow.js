@@ -1,5 +1,7 @@
-// Full Flow Test JavaScript
-const API_BASE_URL = 'http://localhost:8080/api';
+// Full Flow Test JavaScript - Dynamic API URL for both local and deployed environments
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:8080/api' 
+    : `${window.location.protocol}//${window.location.host}/api`;
 
 // Global variables
 let currentResults = null;

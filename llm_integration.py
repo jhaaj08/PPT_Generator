@@ -178,26 +178,60 @@ Begin your analysis and structure the presentation:
     def _parse_llm_response(self, response):
         """Parse LLM response and extract structured data"""
         try:
-            # Try to find JSON in the response
+            # Try to find JSON in the response with robust parsing
             response = response.strip()
             
-            # Look for JSON block
+            # Try multiple JSON extraction methods
+            json_candidates = []
+            
+            # Method 1: Find first complete JSON object
+            start_idx = response.find('{')
+            if start_idx != -1:
+                brace_count = 0
+                end_idx = start_idx
+                for i, char in enumerate(response[start_idx:], start_idx):
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end_idx = i + 1
+                            break
+                
+                if brace_count == 0:
+                    json_candidates.append(response[start_idx:end_idx])
+            
+            # Method 2: Fallback to simple find
             start_idx = response.find('{')
             end_idx = response.rfind('}') + 1
-            
             if start_idx != -1 and end_idx != -1:
-                json_str = response[start_idx:end_idx]
-                parsed = json.loads(json_str)
-                
-                # Validate structure
-                if self._validate_structure(parsed):
-                    return parsed
+                json_candidates.append(response[start_idx:end_idx])
+            
+            # Try parsing each candidate
+            for json_str in json_candidates:
+                try:
+                    # Clean up common JSON issues
+                    json_str = json_str.replace('\n', ' ').replace('\r', '')
+                    # Remove trailing commas before closing braces/brackets
+                    json_str = json_str.replace(',}', '}').replace(',]', ']')
+                    
+                    parsed = json.loads(json_str)
+                    
+                    # Validate structure
+                    if self._validate_structure(parsed):
+                        print(f"✅ Successfully parsed slide structure JSON")
+                        return parsed
+                except json.JSONDecodeError as je:
+                    print(f"   JSON parse attempt failed: {str(je)}")
+                    continue
             
             # If JSON parsing fails, try to extract key information
+            print(f"❌ JSON parsing failed, using fallback extraction")
             return self._extract_fallback_structure(response)
             
         except Exception as e:
             print(f"Error parsing LLM response: {str(e)}")
+            print(f"Response preview: {response[:200]}...")
             return self._create_fallback_structure(response)
     
     def _validate_structure(self, parsed):
@@ -353,22 +387,58 @@ Begin analysis:
 """
     
     def _parse_manifest_response(self, response):
-        """Parse LLM manifest response"""
+        """Parse LLM manifest response with robust error handling"""
         try:
             # Extract JSON from response
             response = response.strip()
+            
+            # Try multiple JSON extraction methods
+            json_candidates = []
+            
+            # Method 1: Find first complete JSON object
+            start_idx = response.find('{')
+            if start_idx != -1:
+                brace_count = 0
+                end_idx = start_idx
+                for i, char in enumerate(response[start_idx:], start_idx):
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end_idx = i + 1
+                            break
+                
+                if brace_count == 0:
+                    json_candidates.append(response[start_idx:end_idx])
+            
+            # Method 2: Fallback to simple find
             start_idx = response.find('{')
             end_idx = response.rfind('}') + 1
-            
             if start_idx != -1 and end_idx != -1:
-                json_str = response[start_idx:end_idx]
-                parsed = json.loads(json_str)
-                return parsed
+                json_candidates.append(response[start_idx:end_idx])
             
+            # Try parsing each candidate
+            for json_str in json_candidates:
+                try:
+                    # Clean up common JSON issues
+                    json_str = json_str.replace('\n', ' ').replace('\r', '')
+                    # Remove trailing commas before closing braces/brackets
+                    json_str = json_str.replace(',}', '}').replace(',]', ']')
+                    
+                    parsed = json.loads(json_str)
+                    print(f"✅ Successfully parsed manifest JSON")
+                    return parsed
+                except json.JSONDecodeError as je:
+                    print(f"   JSON parse attempt failed: {str(je)}")
+                    continue
+            
+            print(f"❌ All JSON parsing attempts failed, using fallback manifest")
             raise ValueError("No valid JSON found in response")
             
         except Exception as e:
             print(f"Error parsing manifest response: {str(e)}")
+            print(f"Response preview: {response[:200]}...")
             raise e
     
     def _create_fallback_manifest(self, raw_data):

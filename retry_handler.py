@@ -159,11 +159,11 @@ async def async_retry_with_backoff(config: Optional[RetryConfig] = None):
 
 # Predefined retry configurations for different scenarios
 class RetryConfigs:
-    # For LLM API calls - more aggressive retry
+    # For LLM API calls - reduced retries for production timeout limits
     LLM_API = RetryConfig(
-        max_retries=5,
-        base_delay=2.0,
-        max_delay=30.0,
+        max_retries=2,  # Reduced from 5 to avoid 30s timeout
+        base_delay=1.0,  # Reduced from 2.0
+        max_delay=15.0,  # Reduced from 30.0
         exponential_factor=1.5
     )
     

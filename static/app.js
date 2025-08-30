@@ -230,32 +230,42 @@ async function handleFormSubmit(e) {
         formData.append('template', templateFile.files[0]);
         
         // Send request to preview endpoint to get slide previews
-        // Step 1 shown during request start
-        const response = await fetch(`${API_BASE_URL}/generate-presentation-with-preview`, {
-            method: 'POST',
-            body: formData
-        });
-        // Steps 2-4 visually progress while awaiting response
-        setMainStep(2);
-        setTimeout(() => setMainStep(3), 800);
-        setTimeout(() => setMainStep(4), 1600);
+        // Show realistic progress during actual processing
+        const progressInterval = setInterval(() => {
+            const currentStep = getCurrentProgressStep();
+            if (currentStep < 4) {
+                setMainStep(currentStep + 1);
+            }
+        }, 3000); // Update every 3 seconds during actual processing
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to generate presentation');
+        try {
+            const response = await fetch(`${API_BASE_URL}/generate-presentation-with-preview`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            // Clear the progress interval once we get a response
+            clearInterval(progressInterval);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate presentation');
+            }
+            
+            // Handle successful response - should be JSON with preview data
+            const data = await response.json();
+            
+            if (data.success) {
+                // Complete all steps and show slide previews
+                completeMainProcessingSteps();
+                showSlidePreview(data);
+            } else {
+                throw new Error(data.error || 'Failed to generate presentation');
+            }
+        } catch (error) {
+            clearInterval(progressInterval);
+            throw error;
         }
-        
-        // Handle successful response - should be JSON with preview data
-        const data = await response.json();
-        
-        if (data.success) {
-            // Show slide previews
-            showSlidePreview(data);
-        } else {
-            throw new Error(data.error || 'Failed to generate presentation');
-        }
-        
-        completeMainProcessingSteps();
         
     } catch (error) {
         console.error('Error generating presentation:', error);
@@ -267,6 +277,7 @@ async function handleFormSubmit(e) {
 
 // --- Processing steps helpers for main page ---
 function resetMainProcessingSteps() {
+    currentProgressStep = 1; // Reset progress tracking
     for (let i = 1; i <= 4; i++) {
         const el = document.getElementById(`mainProcessStep${i}`);
         if (!el) continue;
@@ -276,7 +287,15 @@ function resetMainProcessingSteps() {
     }
 }
 
+// Track current progress step
+let currentProgressStep = 1;
+
+function getCurrentProgressStep() {
+    return currentProgressStep;
+}
+
 function setMainStep(step) {
+    currentProgressStep = step;
     for (let i = 1; i <= step; i++) {
         const el = document.getElementById(`mainProcessStep${i}`);
         if (!el) continue;

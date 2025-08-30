@@ -229,9 +229,9 @@ async function handleFormSubmit(e) {
         formData.append('include_speaker_notes', document.getElementById('includeSpeakerNotes').checked);
         formData.append('template', templateFile.files[0]);
         
-        // Send request
+        // Send request to preview endpoint to get slide previews
         // Step 1 shown during request start
-        const response = await fetch(`${API_BASE_URL}/generate-presentation`, {
+        const response = await fetch(`${API_BASE_URL}/generate-presentation-with-preview`, {
             method: 'POST',
             body: formData
         });
@@ -241,33 +241,21 @@ async function handleFormSubmit(e) {
         setTimeout(() => setMainStep(4), 1600);
         
         if (!response.ok) {
-            // Check if response is JSON (error) or HTML (server error page)
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to generate presentation');
-            } else {
-                // Server returned HTML error page or other non-JSON response
-                const errorText = await response.text();
-                if (errorText.includes('<!DOCTYPE')) {
-                    throw new Error(`Server error (${response.status}). Please check your inputs and try again.`);
-                } else {
-                    throw new Error(errorText || `Server error (${response.status})`);
-                }
-            }
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to generate presentation');
         }
         
-        // Handle successful response - should be a blob (PowerPoint file)
-        const blob = await response.blob();
+        // Handle successful response - should be JSON with preview data
+        const data = await response.json();
         
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-        const filename = `presentation_${timestamp}.pptx`;
-        
-        downloadFile(blob, filename);
+        if (data.success) {
+            // Show slide previews
+            showSlidePreview(data);
+        } else {
+            throw new Error(data.error || 'Failed to generate presentation');
+        }
         
         completeMainProcessingSteps();
-        showSuccess();
         
     } catch (error) {
         console.error('Error generating presentation:', error);
@@ -589,6 +577,128 @@ function validateAllInputs() {
     }
     
     return { valid: true, message: '' };
+}
+
+// Global variable to store current preview data
+let currentPreviewData = null;
+
+// Slide preview functions
+function showSlidePreview(data) {
+    currentPreviewData = data;
+    
+    // Hide form and loading, show preview
+    pptForm.classList.add('hidden');
+    loadingState.classList.add('hidden');
+    document.getElementById('slidePreviewSection').classList.remove('hidden');
+    
+    // Update preview header
+    document.getElementById('previewTitle').textContent = data.presentation_title || 'Generated Presentation';
+    document.getElementById('previewSlideCount').textContent = data.total_slides || 0;
+    document.getElementById('previewTemplate').textContent = data.template_filename || 'Template';
+    document.getElementById('previewSpeakerNotes').textContent = data.slides_with_notes || 0;
+    
+    // Generate slide previews
+    generateMainSlidePreviews(data.slides || []);
+    
+    // Show generation details
+    showMainGenerationDetails(data);
+}
+
+function generateMainSlidePreviews(slides) {
+    const slidePreviews = document.getElementById('mainSlidePreviews');
+    
+    if (!slides || slides.length === 0) {
+        slidePreviews.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">No slides to preview</p>';
+        return;
+    }
+    
+    slidePreviews.innerHTML = slides.map((slide, index) => {
+        // Create content HTML
+        let contentHtml = '';
+        if (Array.isArray(slide.content)) {
+            contentHtml = slide.content.map(item => `• ${item}`).join('<br>');
+        } else if (slide.content) {
+            contentHtml = slide.content.replace(/\n/g, '<br>');
+        }
+        
+        // Gradient backgrounds for visual variety
+        const gradients = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+        ];
+        
+        const gradient = gradients[index % gradients.length];
+        
+        const speakerNotesPreview = slide.speaker_notes ? 
+            `<div class="mt-3 pt-2 border-t border-white border-opacity-30">
+                <div class="text-xs opacity-75 mb-1">📝 Speaker Notes:</div>
+                <div class="text-xs opacity-85">${slide.speaker_notes.length > 60 ? slide.speaker_notes.substring(0, 60) + '...' : slide.speaker_notes}</div>
+            </div>` : '';
+
+        return `
+            <div class="slide-preview" style="background: ${gradient}">
+                <div class="slide-preview-content">
+                    <div class="slide-number">${index + 1}</div>
+                    <div class="slide-title">${slide.title || 'Untitled Slide'}</div>
+                    <div class="slide-content">${contentHtml}</div>
+                    ${speakerNotesPreview}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function showMainGenerationDetails(data) {
+    const generationDetails = document.getElementById('mainGenerationDetails');
+    
+    generationDetails.innerHTML = `
+        <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600 mb-1">${data.total_slides || 0}</div>
+            <div class="text-sm text-gray-600">Slides Generated</div>
+        </div>
+        
+        <div class="text-center">
+            <div class="text-2xl font-bold text-green-600 mb-1">${data.layouts_used || 0}</div>
+            <div class="text-sm text-gray-600">Layouts Applied</div>
+        </div>
+        
+        <div class="text-center">
+            <div class="text-2xl font-bold text-purple-600 mb-1">${data.template_images || 0}</div>
+            <div class="text-sm text-gray-600">Template Assets</div>
+        </div>
+        
+        <div class="text-center">
+            <div class="text-2xl font-bold text-orange-600 mb-1">${data.slides_with_notes || 0}</div>
+            <div class="text-sm text-gray-600">Speaker Notes</div>
+        </div>
+    `;
+}
+
+function downloadFromPreview() {
+    if (currentPreviewData && currentPreviewData.download_url) {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = currentPreviewData.download_url;
+        link.download = currentPreviewData.filename || 'presentation.pptx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showSuccess();
+    } else {
+        showError('Download link not available. Please regenerate the presentation.');
+    }
+}
+
+function regenerateFromPreview() {
+    // Hide preview and show form again
+    document.getElementById('slidePreviewSection').classList.add('hidden');
+    pptForm.classList.remove('hidden');
+    currentPreviewData = null;
 }
 
 // Test function for debugging

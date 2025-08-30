@@ -40,6 +40,39 @@
             border-color: #3182ce;
             background-color: #ebf8ff;
         }
+        .slide-preview {
+            min-height: 200px;
+            border-radius: 8px;
+            padding: 16px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .slide-preview-content {
+            position: relative;
+            z-index: 2;
+        }
+        .slide-preview .slide-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+        .slide-preview .slide-content {
+            font-size: 12px;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+        .slide-preview .slide-number {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.3);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
@@ -264,6 +297,57 @@
                 <div class="flex items-center">
                     <i class="fas fa-exclamation-circle mr-2"></i>
                     <span id="errorText"></span>
+                </div>
+            </div>
+
+            <!-- Slide Preview Section -->
+            <div id="slidePreviewSection" class="hidden mt-8">
+                <!-- Preview Header -->
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800" id="previewTitle">Generated Presentation</h3>
+                            <p class="text-gray-600 mt-1">
+                                <span id="previewSlideCount">0</span> slides • 
+                                <span id="previewTemplate">Template</span> • 
+                                <span id="previewSpeakerNotes">0</span> speaker notes
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <button 
+                                onclick="regenerateFromPreview()" 
+                                class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+                            >
+                                <i class="fas fa-redo mr-2"></i>Regenerate
+                            </button>
+                            <button 
+                                onclick="downloadFromPreview()" 
+                                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg font-bold transition duration-200"
+                            >
+                                <i class="fas fa-download mr-2"></i>Download PPTX
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide Previews Grid -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-eye mr-2"></i>Slide Previews
+                    </h4>
+                    <div id="mainSlidePreviews" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Generation Details -->
+                <div class="mt-6 bg-white rounded-lg shadow-lg p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-info-circle mr-2"></i>Generation Details
+                    </h4>
+                    <div id="mainGenerationDetails" class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Populated by JavaScript -->
+                    </div>
                 </div>
             </div>
         </div>

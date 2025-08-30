@@ -241,13 +241,30 @@ async function handleFormSubmit(e) {
         setTimeout(() => setMainStep(4), 1600);
         
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to generate presentation');
+            // Check if response is JSON (error) or HTML (server error page)
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate presentation');
+            } else {
+                // Server returned HTML error page or other non-JSON response
+                const errorText = await response.text();
+                if (errorText.includes('<!DOCTYPE')) {
+                    throw new Error(`Server error (${response.status}). Please check your inputs and try again.`);
+                } else {
+                    throw new Error(errorText || `Server error (${response.status})`);
+                }
+            }
         }
         
-        // Handle successful response
+        // Handle successful response - should be a blob (PowerPoint file)
         const blob = await response.blob();
-        downloadFile(blob, 'generated_presentation.pptx');
+        
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+        const filename = `presentation_${timestamp}.pptx`;
+        
+        downloadFile(blob, filename);
         
         completeMainProcessingSteps();
         showSuccess();

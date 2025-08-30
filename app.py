@@ -91,6 +91,7 @@ def generate_presentation():
         guidance = request.form.get('guidance', '').strip()
         api_key = request.form.get('api_key', '').strip()
         llm_provider = request.form.get('llm_provider', 'openai').strip()
+        include_speaker_notes = request.form.get('include_speaker_notes', 'false').lower() == 'true'
         
         if not input_text:
             return jsonify({'error': 'Input text is required'}), 400
@@ -105,6 +106,7 @@ def generate_presentation():
         
         try:
             print(f"🚀 Starting manifest-based presentation generation...")
+            print(f"   Speaker notes enabled: {include_speaker_notes}")
             
             # Initialize processors
             ppt_processor = ImprovedPPTProcessor()

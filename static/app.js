@@ -216,6 +216,8 @@ async function handleFormSubmit(e) {
     
     // Show loading state
     showLoadingState();
+    resetMainProcessingSteps();
+    setMainStep(1);
     
     try {
         // Prepare form data
@@ -224,13 +226,19 @@ async function handleFormSubmit(e) {
         formData.append('guidance', guidance.value.trim());
         formData.append('api_key', apiKey.value.trim());
         formData.append('llm_provider', llmProvider.value);
+        formData.append('include_speaker_notes', document.getElementById('includeSpeakerNotes').checked);
         formData.append('template', templateFile.files[0]);
         
         // Send request
+        // Step 1 shown during request start
         const response = await fetch(`${API_BASE_URL}/generate-presentation`, {
             method: 'POST',
             body: formData
         });
+        // Steps 2-4 visually progress while awaiting response
+        setMainStep(2);
+        setTimeout(() => setMainStep(3), 800);
+        setTimeout(() => setMainStep(4), 1600);
         
         if (!response.ok) {
             const errorData = await response.json();
@@ -241,6 +249,7 @@ async function handleFormSubmit(e) {
         const blob = await response.blob();
         downloadFile(blob, 'generated_presentation.pptx');
         
+        completeMainProcessingSteps();
         showSuccess();
         
     } catch (error) {
@@ -249,6 +258,29 @@ async function handleFormSubmit(e) {
     } finally {
         hideLoadingState();
     }
+}
+
+// --- Processing steps helpers for main page ---
+function resetMainProcessingSteps() {
+    for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`mainProcessStep${i}`);
+        if (!el) continue;
+        el.innerHTML = el.innerHTML
+            .replace('fa-check text-green-600', 'fa-circle-notch fa-spin')
+            .replace('text-gray-500', 'text-gray-700');
+    }
+}
+
+function setMainStep(step) {
+    for (let i = 1; i <= step; i++) {
+        const el = document.getElementById(`mainProcessStep${i}`);
+        if (!el) continue;
+        el.innerHTML = el.innerHTML.replace('fa-circle-notch fa-spin', 'fa-check text-green-600');
+    }
+}
+
+function completeMainProcessingSteps() {
+    setMainStep(4);
 }
 
 function validateForm() {

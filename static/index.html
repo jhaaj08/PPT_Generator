@@ -146,6 +146,24 @@
                     </div>
                 </div>
 
+                <!-- Speaker Notes Option -->
+                <div>
+                    <label class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="includeSpeakerNotes"
+                            checked
+                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        >
+                        <span class="ml-3 text-lg font-semibold text-gray-800">
+                            <i class="fas fa-microphone mr-2"></i>Include Speaker Notes
+                        </span>
+                    </label>
+                    <p class="text-sm text-gray-500 mt-2 ml-7">
+                        Generate detailed speaker notes for each slide to help with presentation delivery
+                    </p>
+                </div>
+
                 <!-- File Upload Section -->
                 <div>
                     <label class="block text-lg font-semibold text-gray-800 mb-3">
@@ -214,6 +232,29 @@
                 <div class="loading-spinner mx-auto mb-4"></div>
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">Generating Your Presentation</h3>
                 <p class="text-gray-600" id="loadingMessage">Analyzing your text and template...</p>
+
+                <!-- Visible Processing Steps for Evaluators -->
+                <div id="stepsPanel" class="mt-6 text-left max-w-2xl mx-auto">
+                    <h4 class="text-md font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-list-check mr-2"></i>Processing Steps
+                    </h4>
+                    <div id="mainProcessStep1" class="flex items-center text-gray-700 mb-2">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                        <span>Extracting template data</span>
+                    </div>
+                    <div id="mainProcessStep2" class="flex items-center text-gray-700 mb-2">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                        <span>Generating manifest with LLM</span>
+                    </div>
+                    <div id="mainProcessStep3" class="flex items-center text-gray-700 mb-2">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                        <span>Structuring content into slides</span>
+                    </div>
+                    <div id="mainProcessStep4" class="flex items-center text-gray-700">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                        <span>Applying template styling and generating PPTX</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Error Message -->

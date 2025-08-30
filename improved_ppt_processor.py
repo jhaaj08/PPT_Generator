@@ -374,18 +374,12 @@ class ImprovedPPTProcessor:
                         run.font.size = Pt(font_info.get('size', 18))
                         run.font.bold = font_info.get('bold', False)
                 
-                # Apply colors with better selection
-                if colors:
-                    # Use different colors for title vs content
-                    color_idx = min(1, len(colors) - 1) if is_title else 0
-                    color_hex = colors[color_idx].replace('#', '')
-                    
-                    if len(color_hex) == 6:
-                        try:
-                            rgb = tuple(int(color_hex[i:i+2], 16) for i in (0, 2, 4))
-                            run.font.color.rgb = RGBColor(*rgb)
-                        except:
-                            pass
+                # Force all text to be black for readability
+                # (Override any template colors that might be white or light)
+                try:
+                    run.font.color.rgb = RGBColor(0, 0, 0)  # Black color
+                except:
+                    pass
     
     def _add_template_images_enhanced(self, slide, template_analysis):
         """Enhanced template image addition"""
@@ -798,20 +792,14 @@ class ImprovedPPTProcessor:
             if format_rules.get('bold'):
                 font.bold = True
             
-            # Apply color from palette
-            color_key = format_rules.get('color')
-            if color_key and palette.get(color_key):
-                color_hex = palette[color_key].replace('#', '')
-                if len(color_hex) == 6:
-                    try:
-                        rgb_color = RGBColor(
-                            int(color_hex[0:2], 16),
-                            int(color_hex[2:4], 16), 
-                            int(color_hex[4:6], 16)
-                        )
-                        font.color.rgb = rgb_color
-                    except:
-                        pass
+            # Force all text to be black for readability
+            # (Override any template colors that might be white or light)
+            try:
+                font.color.rgb = RGBColor(0, 0, 0)  # Black color
+                print(f"         Applied black text color")
+            except Exception as color_error:
+                print(f"         Warning: Could not apply black color: {str(color_error)}")
+                pass
             
         except Exception as e:
             print(f"     Warning: Text formatting failed: {str(e)}")

@@ -459,8 +459,51 @@ def generate_presentation_with_preview():
             print(f"🧠 Template manifest generated with {len(manifest.get('layouts', []))} layout rules")
             
             # Step 4: Structure the content using LLM
-            slide_structure = llm_integration.structure_text_to_slides(input_text, guidance)
-            print(f"📋 Content structured into {len(slide_structure.get('slides', []))} slides")
+            try:
+                print(f"🔄 Starting content structuring with LLM...")
+                print(f"   Text length: {len(input_text)} characters")
+                print(f"   Guidance: {guidance[:100]}..." if guidance else "   No guidance provided")
+                
+                slide_structure = llm_integration.structure_text_to_slides(input_text, guidance)
+                
+                if not slide_structure or not slide_structure.get('slides'):
+                    raise ValueError("LLM returned empty or invalid slide structure")
+                
+                print(f"📋 Content structured into {len(slide_structure.get('slides', []))} slides")
+                
+            except Exception as structure_error:
+                print(f"❌ Error during content structuring: {str(structure_error)}")
+                print(f"   Creating fallback structure...")
+                
+                # Create a simple fallback structure
+                slide_structure = {
+                    'presentation_title': 'Generated Presentation',
+                    'total_slides': 3,
+                    'slides': [
+                        {
+                            'slide_number': 1,
+                            'title': 'Introduction',
+                            'type': 'content',
+                            'content': input_text[:500] + '...' if len(input_text) > 500 else input_text,
+                            'speaker_notes': 'Introduction slide with key content overview.'
+                        },
+                        {
+                            'slide_number': 2,
+                            'title': 'Main Content',
+                            'type': 'content', 
+                            'content': input_text[500:1000] + '...' if len(input_text) > 1000 else input_text[500:],
+                            'speaker_notes': 'Main content section with detailed information.'
+                        },
+                        {
+                            'slide_number': 3,
+                            'title': 'Summary',
+                            'type': 'content',
+                            'content': 'Key takeaways and next steps from the provided content.',
+                            'speaker_notes': 'Summary slide highlighting the main points and conclusions.'
+                        }
+                    ]
+                }
+                print(f"📋 Using fallback structure with {len(slide_structure['slides'])} slides")
             
             # Step 5: Generate presentation using manifest
             prs = ppt_processor.generate_presentation_with_manifest(slide_structure, template_path, manifest)
@@ -503,12 +546,30 @@ def generate_presentation_with_preview():
             
         finally:
             # Cleanup uploaded template (but keep generated file for download)
-            if os.path.exists(template_path):
-                os.remove(template_path)
+            try:
+                if os.path.exists(template_path):
+                    os.remove(template_path)
+                    print(f"🧹 Cleaned up template file: {template_path}")
+            except Exception as cleanup_error:
+                print(f"⚠️  Warning: Could not cleanup template file: {str(cleanup_error)}")
+            
+            # Force garbage collection to free memory
+            import gc
+            gc.collect()
+            print(f"🧹 Memory cleanup completed")
         
     except Exception as e:
-        print(f"Error generating presentation with preview: {str(e)}")
+        print(f"❌ CRITICAL ERROR in presentation generation: {str(e)}")
+        print(f"   Error type: {type(e).__name__}")
         print(traceback.format_exc())
+        
+        # Force cleanup on error
+        try:
+            import gc
+            gc.collect()
+        except:
+            pass
+            
         return jsonify({'error': f'Failed to generate presentation: {str(e)}'}), 500
 
 @app.route('/api/supported-providers', methods=['GET'])

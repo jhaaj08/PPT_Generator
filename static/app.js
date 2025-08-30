@@ -248,12 +248,32 @@ async function handleFormSubmit(e) {
             clearInterval(progressInterval);
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to generate presentation');
+                // Check if response is JSON (error) or HTML (server error page)
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to generate presentation');
+                } else {
+                    // Server returned HTML error page or other non-JSON response
+                    const errorText = await response.text();
+                    console.error('Server returned non-JSON response:', errorText.substring(0, 200));
+                    if (errorText.includes('<!DOCTYPE')) {
+                        throw new Error(`Server error (${response.status}). Please check your inputs and try again.`);
+                    } else {
+                        throw new Error(errorText || `Server error (${response.status})`);
+                    }
+                }
             }
             
             // Handle successful response - should be JSON with preview data
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                // If JSON parsing fails, we can't read the response again
+                console.error('Failed to parse JSON response:', jsonError.message);
+                throw new Error('Server returned invalid response format. Please check the browser console for details.');
+            }
             
             if (data.success) {
                 // Complete all steps and show slide previews

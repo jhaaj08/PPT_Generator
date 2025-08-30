@@ -300,12 +300,7 @@
                 </div>
             </div>
 
-            <!-- Debug Test Button -->
-            <div class="mb-4">
-                <button onclick="testSlidePreviewManually()" class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg">
-                    🧪 Test Slide Preview (Debug)
-                </button>
-            </div>
+
 
             <!-- Slide Preview Section -->
             <div id="slidePreviewSection" class="mt-8" style="display: none;">
@@ -323,15 +318,15 @@
                         <div class="flex items-center space-x-4">
                             <button 
                                 onclick="regenerateFromPreview()" 
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
+                                class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200"
                             >
-                                <i class="fas fa-redo mr-2"></i>Regenerate
+                                <i class="fas fa-redo mr-2"></i>Edit & Regenerate
                             </button>
                             <button 
                                 onclick="downloadFromPreview()" 
-                                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg font-bold transition duration-200"
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 shadow-lg"
                             >
-                                <i class="fas fa-download mr-2"></i>Download PPTX
+                                <i class="fas fa-check-circle mr-2"></i>Approve & Download Presentation
                             </button>
                         </div>
                     </div>

@@ -248,14 +248,10 @@ async function handleFormSubmit(e) {
         // Handle successful response - should be JSON with preview data
         const data = await response.json();
         
-        console.log('🔍 Response data:', data);
-        
         if (data.success) {
-            console.log('✅ Success! Showing slide previews...');
             // Show slide previews
             showSlidePreview(data);
         } else {
-            console.log('❌ Error in response:', data.error);
             throw new Error(data.error || 'Failed to generate presentation');
         }
         
@@ -401,14 +397,14 @@ function showSuccessMessage(message) {
     }, 3000);
 }
 
-function showSuccess() {
+function showSuccess(message) {
     // Create success message
     const successDiv = document.createElement('div');
     successDiv.className = 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4';
     successDiv.innerHTML = `
         <div class="flex items-center">
             <i class="fas fa-check-circle mr-2"></i>
-            <span>Presentation generated successfully! Your download should start automatically.</span>
+            <span>${message || 'Presentation generated successfully! Your download should start automatically.'}</span>
         </div>
     `;
     
@@ -588,21 +584,17 @@ let currentPreviewData = null;
 
 // Slide preview functions
 function showSlidePreview(data) {
-    console.log('🎬 showSlidePreview called with data:', data);
     currentPreviewData = data;
     
     // Hide form and loading, show preview
-    console.log('🔄 Hiding form and loading, showing preview...');
     pptForm.classList.add('hidden');
     loadingState.classList.add('hidden');
     
     const previewSection = document.getElementById('slidePreviewSection');
-    console.log('📋 Preview section element:', previewSection);
     
     if (previewSection) {
         previewSection.style.display = 'block';
         previewSection.classList.remove('hidden');
-        console.log('✅ Preview section shown!');
     } else {
         console.error('❌ slidePreviewSection element not found!');
         return;
@@ -705,7 +697,11 @@ function downloadFromPreview() {
         link.click();
         document.body.removeChild(link);
         
-        showSuccess();
+        // Show success message
+        showSuccess('🎉 Presentation downloaded successfully! Your PowerPoint file is ready to use.');
+        
+        // Optionally scroll to top after download
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
         showError('Download link not available. Please regenerate the presentation.');
     }
@@ -713,47 +709,14 @@ function downloadFromPreview() {
 
 function regenerateFromPreview() {
     // Hide preview and show form again
-    document.getElementById('slidePreviewSection').classList.add('hidden');
+    const previewSection = document.getElementById('slidePreviewSection');
+    previewSection.style.display = 'none';
+    previewSection.classList.add('hidden');
     pptForm.classList.remove('hidden');
     currentPreviewData = null;
 }
 
-// Test function for slide preview
-function testSlidePreviewManually() {
-    console.log('🧪 Manual slide preview test...');
-    
-    const testData = {
-        success: true,
-        presentation_title: "Test Presentation",
-        total_slides: 3,
-        template_filename: "test_template.pptx",
-        slides_with_notes: 2,
-        layouts_used: 2,
-        template_images: 1,
-        slides: [
-            {
-                slide_number: 1,
-                title: "Introduction",
-                content: ["Welcome to our presentation", "Overview of key topics", "What you'll learn today"],
-                speaker_notes: "Start with a warm welcome and briefly outline what the audience will learn in this presentation."
-            },
-            {
-                slide_number: 2,
-                title: "Main Content",
-                content: ["Key point number one", "Important detail here", "Supporting evidence"],
-                speaker_notes: "Dive deep into the main content, providing examples and evidence to support your key points."
-            },
-            {
-                slide_number: 3,
-                title: "Conclusion",
-                content: ["Summary of key points", "Next steps", "Thank you for your attention"],
-                speaker_notes: "Wrap up with a clear summary and provide actionable next steps for the audience."
-            }
-        ]
-    };
-    
-    showSlidePreview(testData);
-}
+
 
 // Test function for debugging
 window.testFileUpload = function() {
